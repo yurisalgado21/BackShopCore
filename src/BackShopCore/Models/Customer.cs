@@ -71,8 +71,18 @@ namespace BackShopCore.Models
 
         private void SetEmail(string email)
         {
+            if (!IsValidEmail(email))
+            {
+                throw new ArgumentException("Invalid email format.");
+            }
             _email = email;
         }
+
+        private bool IsValidEmail(string email)
+        {
+            return new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(email);
+        }
+
 
         private void SetDateOfBirth(DateTime dateOfBirth)
         {
