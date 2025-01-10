@@ -1,42 +1,61 @@
+using BackShopCore.Data;
 using BackShopCore.Utils;
+using Microsoft.EntityFrameworkCore;
 
 namespace BackShopCore.Repository
 {
     public class RepositoryBase<TEntity> : IRepositoryBase<TEntity> where TEntity : class
     {
+        private readonly ApplicationDbContext _dbContext;
+        private DbSet<TEntity> _dbSetEntity;
+
+        public RepositoryBase(ApplicationDbContext dbContext)
+        {
+            _dbContext = dbContext;
+            _dbSetEntity = _dbContext.Set<TEntity>();
+        }
+
         public TEntity Add(TEntity entity)
         {
-            throw new NotImplementedException();
+            _dbSetEntity.Add(entity: entity);
+
+            return entity;
         }
 
         public void AddRange(IEnumerable<TEntity> entities)
         {
-            throw new NotImplementedException();
+            _dbSetEntity.AddRange(entities: entities);
         }
 
         public void Delete(int id)
         {
-            throw new NotImplementedException();
+            _dbSetEntity.Remove(entity: _dbSetEntity.Find(id)!);
         }
 
         public IQueryable<TEntity> GetAll(PaginationFilter paginationFilter)
         {
-            throw new NotImplementedException();
+            var pagedData = _dbSetEntity
+                .Skip((paginationFilter.PageNumber - 1) * paginationFilter.PageSize)
+                .Take(paginationFilter.PageSize);
+
+            return pagedData;
         }
 
         public TEntity GetById(int id)
         {
-            throw new NotImplementedException();
+            return _dbSetEntity.Find(keyValues: id)!;
         }
 
         public void SaveChanges()
         {
-            throw new NotImplementedException();
+            _dbContext.SaveChanges();
         }
 
         public TEntity Update(int id, TEntity entity)
         {
-            throw new NotImplementedException();
+            _dbSetEntity.Update(entity: entity);
+
+            return _dbSetEntity.Find(keyValues: id)!;
         }
     }
 }
