@@ -1,17 +1,18 @@
 using System.ComponentModel.DataAnnotations;
+using BackShopCore.Utils;
 
 namespace BackShopCore.Dto
 {
     public class CustomerDtoRequest
     {
-        [Required(ErrorMessage = "FirstName is Required")]
-        [MaxLength(40, ErrorMessage = "Must have a maximum of 40 characters")]
+        [Required(ErrorMessage = ResponseMessages.FirstNameIsRequired)]
+        [MaxLength(40, ErrorMessage = ResponseMessages.MaximumCharacters)]
         public string FirstName { get; set; }
-        [Required(ErrorMessage = "LastName is Required")]
-        [MaxLength(40, ErrorMessage = "Must have a maximum of 40 characters")]
+        [Required(ErrorMessage = ResponseMessages.LastNameIsRequired)]
+        [MaxLength(40, ErrorMessage = ResponseMessages.MaximumCharacters)]
         public string LastName { get; set; }
-        [Required(ErrorMessage = "Email is Required")]
-        [EmailAddress(ErrorMessage = "The Email field is not a valid e-mail address.")]
+        [Required(ErrorMessage = ResponseMessages.EmailIsRequired)]
+        [EmailAddress(ErrorMessage = ResponseMessages.EmailFieldIsNotAValid)]
         public string Email { get; set; }
         [Required]
         [DataType(DataType.Date)]
