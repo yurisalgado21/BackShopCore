@@ -9,9 +9,11 @@
 # Build results
 
 [Dd]ebug/
+Debug/
 [Rr]elease/
 x64/
 [Bb]in/
+bin/
 [Oo]bj/
 obj/
 Migrations/
