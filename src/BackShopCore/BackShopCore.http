@@ -1,0 +1,6 @@
+@BackShopCore_HostAddress = http://localhost:5105
+
+GET {{BackShopCore_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
