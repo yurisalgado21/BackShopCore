@@ -1,3 +1,5 @@
+using BackShopCore.Data;
+using BackShopCore.Dto;
 using BackShopCore.Services;
 using BackShopCore.Utils;
 using Microsoft.AspNetCore.Mvc;
@@ -9,10 +11,12 @@ namespace BackShopCore.Controllers
     public class CustomersController : ControllerBase
     {
         private readonly ICustomerServices _customerServices;
+        private readonly ApplicationDbContext _dbContext;
 
-        public CustomersController(ICustomerServices customerServices)
+        public CustomersController(ICustomerServices customerServices, ApplicationDbContext dbContext)
         {
             _customerServices = customerServices;
+            _dbContext = dbContext;
         }
 
         [HttpGet]
@@ -27,6 +31,18 @@ namespace BackShopCore.Controllers
             if (customers.Count() == 0) return NoContent();
 
             return Ok(customers);
+        }
+
+        [HttpPost]
+        public IActionResult Add([FromBody] CustomerDtoRequest customerDtoRequest)
+        {
+            var result = _customerServices.Add(customerDtoRequest: customerDtoRequest);
+
+            if (!result.Success) return StatusCode(result.StatusCode, result.Message);
+
+            _dbContext.SaveChanges();
+
+            return Created("", result.Data);
         }
     }
 }

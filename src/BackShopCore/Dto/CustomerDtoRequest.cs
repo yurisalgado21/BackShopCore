@@ -16,6 +16,6 @@ namespace BackShopCore.Dto
         public string Email { get; set; }
         [Required]
         [DataType(DataType.Date)]
-        public DateOnly DateOfBirth { get; set; }
+        public DateTime DateOfBirth { get; set; }
     }
 }
