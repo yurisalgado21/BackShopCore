@@ -102,9 +102,7 @@ namespace BackShopCore.Models
 
             IsValid = _firstName.Length <= 40
             && _lastName.Length <= 40
-            && _dateOfBirth.Day <= dateNow.Day
-            && _dateOfBirth.Month <= dateNow.Month
-            && _dateOfBirth.Year <= dateNow.Year;
+            && _dateOfBirth <= DateOnly.FromDateTime(dateNow);
         }
     }
 }

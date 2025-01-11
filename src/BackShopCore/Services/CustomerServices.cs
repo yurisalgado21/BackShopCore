@@ -19,6 +19,10 @@ namespace BackShopCore.Services
             var dateIsNotValid = VerifyDateOfBirth(dateOfBirth: customerDtoRequest.DateOfBirth);
             if (dateIsNotValid) return ServiceResult<Customer>.ErrorResult(message: ResponseMessages.DateOfBirthError, statusCode: 400);
 
+            var findCustomer = GetByEmail(email: customerDtoRequest.Email);
+
+            if (findCustomer != null) return ServiceResult<Customer>.ErrorResult(message: ResponseMessages.EmailExistsError, 409);
+
             var newCustomer = Customer.RegisterNew
             (
                 firstName: customerDtoRequest.FirstName,
@@ -26,6 +30,11 @@ namespace BackShopCore.Services
                 email: customerDtoRequest.Email,
                 dateOfBirth: customerDtoRequest.DateOfBirth
             );
+
+            if (!newCustomer.IsValid)
+            {
+                return ServiceResult<Customer>.ErrorResult(message: "Customer is not valid", 400);
+            }
 
             _customerRepository.Add(entity: newCustomer);
             return ServiceResult<Customer>.SuccessResult(data: newCustomer, statusCode: 201);
@@ -36,6 +45,13 @@ namespace BackShopCore.Services
             var customers = _customerRepository.GetAll(paginationFilter: paginationFilter);
 
             return customers;
+        }
+
+        public Customer GetByEmail(string email)
+        {
+            var findCustomer = _customerRepository.GetByEmail(email: email);
+
+            return findCustomer;
         }
 
         public bool VerifyDateOfBirth(DateTime dateOfBirth)
