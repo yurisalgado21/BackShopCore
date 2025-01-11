@@ -33,6 +33,19 @@ namespace BackShopCore.Controllers
             return Ok(customers);
         }
 
+        [HttpGet("{id}")]
+        public IActionResult GetById(int id)
+        {
+            var result = _customerServices.GetById(id: id);
+
+            if (!result.Success)
+            {
+                return StatusCode(statusCode: result.StatusCode, value: result.Data);
+            }
+
+            return Ok(result.Data);
+        }
+
         [HttpPost]
         public IActionResult Add([FromBody] CustomerDtoRequest customerDtoRequest)
         {
@@ -42,7 +55,7 @@ namespace BackShopCore.Controllers
 
             _dbContext.SaveChanges();
 
-            return Created("", result.Data);
+            return CreatedAtAction(actionName: nameof(GetById), routeValues: new { id = result.Data.CustomerId }, value: result.Data);
         }
     }
 }

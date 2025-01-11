@@ -9,6 +9,7 @@ namespace BackShopCore.Services
         public bool VerifyDateOfBirth(DateTime dateOfBirth);
         public IEnumerable<Customer> GetAll(PaginationFilter paginationFilter);
         public Customer GetByEmail(string email);
+        public ServiceResult<Customer> GetById(int id);
         public ServiceResult<Customer> Add(CustomerDtoRequest customerDtoRequest);
     }
 }

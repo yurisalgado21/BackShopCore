@@ -54,6 +54,30 @@ namespace BackShopCore.Services
             return findCustomer;
         }
 
+        public ServiceResult<Customer> GetById(int id)
+        {
+            var findCustomer = _customerRepository.GetById(id: id);
+
+            if (findCustomer == null)
+            {
+                return ServiceResult<Customer>.ErrorResult(message: ResponseMessages.CustomerNotFoundMessage, 404);
+            }
+
+            var customer = Customer.SetExistingInfo
+            (
+                customerId: findCustomer.CustomerId,
+                firstName: findCustomer.FirstName,
+                lastName: findCustomer.LastName,
+                email: findCustomer.Email,
+                dateOfBirth: findCustomer.DateOfBirth
+            );
+
+            return ServiceResult<Customer>.SuccessResult
+            (
+                data: customer
+            );
+        }
+
         public bool VerifyDateOfBirth(DateTime dateOfBirth)
         {
             var dateNow = DateTime.UtcNow;
