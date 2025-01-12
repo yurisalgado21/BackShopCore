@@ -3,6 +3,7 @@ namespace BackShopCore.Utils
     public class ResponseMessages
     {
         public const string CustomerNotFoundMessage = "Customer not found";
+        public const string CustomerIsNotValid = "Customer is not valid";
         public const string AddressNotFoundMessage = "Address not found";
         public const string ProductNotFoundMessage = "Product not found";
         public const string CustomerPaginationError = "The pagination parameters 'pageSize' and 'pageNumber' must be positive numbers. Check the values ​​provided.";

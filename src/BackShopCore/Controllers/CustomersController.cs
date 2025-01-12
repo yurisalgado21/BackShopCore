@@ -57,5 +57,20 @@ namespace BackShopCore.Controllers
 
             return CreatedAtAction(actionName: nameof(GetById), routeValues: new { id = result.Data.CustomerId }, value: result.Data);
         }
+
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, [FromBody] CustomerDtoRequest customerDtoRequest)
+        {
+            var result = _customerServices.Update(id: id, customerDtoRequest: customerDtoRequest);
+
+            if (!result.Success)
+            {
+                return StatusCode(statusCode: result.StatusCode, value: result.Message);
+            }
+
+            _dbContext.SaveChanges();
+
+            return Ok(result.Data);
+        }
     }
 }

@@ -1,17 +1,21 @@
+using BackShopCore.Data;
 using BackShopCore.Dto;
 using BackShopCore.Models;
 using BackShopCore.Repository;
 using BackShopCore.Utils;
+using Microsoft.EntityFrameworkCore;
 
 namespace BackShopCore.Services
 {
     public class CustomerServices : ICustomerServices
     {
         private readonly ICustomerRepository _customerRepository;
+        private readonly IApplicationDbContext _dbContext;
 
-        public CustomerServices(ICustomerRepository customerRepository)
+        public CustomerServices(ICustomerRepository customerRepository, IApplicationDbContext dbContext)
         {
             _customerRepository = customerRepository;
+            _dbContext = dbContext;
         }
 
         public ServiceResult<Customer> Add(CustomerDtoRequest customerDtoRequest)
@@ -33,7 +37,7 @@ namespace BackShopCore.Services
 
             if (!newCustomer.IsValid)
             {
-                return ServiceResult<Customer>.ErrorResult(message: "Customer is not valid", 400);
+                return ServiceResult<Customer>.ErrorResult(message: ResponseMessages.CustomerIsNotValid, 422);
             }
 
             _customerRepository.Add(entity: newCustomer);
@@ -76,6 +80,46 @@ namespace BackShopCore.Services
             (
                 data: customer
             );
+        }
+
+        public ServiceResult<Customer> Update(int id, CustomerDtoRequest customerDtoRequest)
+        {
+            var findCustomer = _dbContext.Customers.AsNoTracking().FirstOrDefault(c => c.CustomerId == id);
+
+            if (findCustomer == null)
+            {
+                return ServiceResult<Customer>.ErrorResult(message: ResponseMessages.CustomerNotFoundMessage, statusCode: 404);
+            }
+
+            var findCustomerByEmail = GetByEmail(email: customerDtoRequest.Email);
+
+            if (findCustomerByEmail != null) return ServiceResult<Customer>.ErrorResult(message: ResponseMessages.EmailExistsError, 409);
+
+            if (findCustomer.CustomerId != id && findCustomerByEmail!.Email == customerDtoRequest.Email)
+            {
+                return ServiceResult<Customer>.ErrorResult(message: ResponseMessages.ResourceWasNotFound, statusCode: 422);
+            }
+
+            var dateIsNotValid = VerifyDateOfBirth(dateOfBirth: customerDtoRequest.DateOfBirth);
+            if (dateIsNotValid) return ServiceResult<Customer>.ErrorResult(message: ResponseMessages.DateOfBirthError, statusCode: 400);
+
+            var customer = Customer.SetExistingInfo
+            (
+                customerId: findCustomer!.CustomerId,
+                firstName: customerDtoRequest.FirstName,
+                lastName: customerDtoRequest.LastName,
+                email: customerDtoRequest.Email,
+                dateOfBirth: DateOnly.FromDateTime(customerDtoRequest.DateOfBirth)
+            );
+
+            if (!customer.IsValid)
+            {
+                return ServiceResult<Customer>.ErrorResult(message: ResponseMessages.CustomerIsNotValid, statusCode: 422);
+            }
+
+            var updatedCustomer = _customerRepository.Update(id: id, entity: customer);
+
+            return ServiceResult<Customer>.SuccessResult(data: updatedCustomer);
         }
 
         public bool VerifyDateOfBirth(DateTime dateOfBirth)
