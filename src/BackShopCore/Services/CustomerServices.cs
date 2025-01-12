@@ -44,6 +44,20 @@ namespace BackShopCore.Services
             return ServiceResult<Customer>.SuccessResult(data: newCustomer, statusCode: 201);
         }
 
+        public ServiceResult<Customer> Delete(int id)
+        {
+            var findCustomer = _customerRepository.GetById(id: id);
+
+            if (findCustomer == null)
+            {
+                return ServiceResult<Customer>.ErrorResult(message: ResponseMessages.CustomerNotFoundMessage, statusCode: 404);
+            }
+
+            _customerRepository.Delete(id: id);
+
+            return ServiceResult<Customer>.SuccessResult(data: findCustomer, statusCode: 204); 
+        }
+
         public IEnumerable<Customer> GetAll(PaginationFilter paginationFilter)
         {
             var customers = _customerRepository.GetAll(paginationFilter: paginationFilter);

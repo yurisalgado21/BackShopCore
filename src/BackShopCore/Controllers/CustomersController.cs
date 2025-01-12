@@ -72,5 +72,20 @@ namespace BackShopCore.Controllers
 
             return Ok(result.Data);
         }
+
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            var result = _customerServices.Delete(id: id);
+
+            if (!result.Success)
+            {
+                return StatusCode(statusCode: result.StatusCode, value: result.Message);
+            }
+
+            _dbContext.SaveChanges();
+
+            return NoContent();
+        }
     }
 }

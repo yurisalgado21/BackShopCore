@@ -12,5 +12,6 @@ namespace BackShopCore.Services
         public ServiceResult<Customer> GetById(int id);
         public ServiceResult<Customer> Add(CustomerDtoRequest customerDtoRequest);
         public ServiceResult<Customer> Update(int id, CustomerDtoRequest customerDtoRequest);
+        public ServiceResult<Customer> Delete(int id);
     }
 }
