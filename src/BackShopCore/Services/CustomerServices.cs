@@ -21,7 +21,7 @@ namespace BackShopCore.Services
         public ServiceResult<Customer> Add(CustomerDtoRequest customerDtoRequest)
         {
             var dateIsNotValid = VerifyDateOfBirth(dateOfBirth: customerDtoRequest.DateOfBirth);
-            if (dateIsNotValid) return ServiceResult<Customer>.ErrorResult(message: ResponseMessages.DateOfBirthError, statusCode: 400);
+            if (dateIsNotValid) return ServiceResult<Customer>.ErrorResult(message: ResponseMessages.DateOfBirthError, statusCode: 422);
 
             var findCustomer = GetByEmail(email: customerDtoRequest.Email);
 
@@ -42,6 +42,63 @@ namespace BackShopCore.Services
 
             _customerRepository.Add(entity: newCustomer);
             return ServiceResult<Customer>.SuccessResult(data: newCustomer, statusCode: 201);
+        }
+
+        public ServiceResult<IEnumerable<Customer>> AddBulk(IEnumerable<CustomerDtoRequest> customersDtoRequest)
+        {
+            var listCustomers = new List<Customer>();
+
+            //verificar se existe duplicatas de email
+            var duplicateEmails = CheckForDuplicateEmails(customersDtoRequests: customersDtoRequest);
+
+            if (duplicateEmails.Any())
+            {
+                return ServiceResult<IEnumerable<Customer>>.ErrorResult(message: $"{ResponseMessages.DuplicateEmailFoundError}: {string.Join(", ", duplicateEmails)}", statusCode: 409);
+            }
+            
+            foreach (var customerDtoRequest in customersDtoRequest)
+            {
+                // verificar data maior que hoje.
+                var dateIsNotValid = VerifyDateOfBirth(dateOfBirth: customerDtoRequest.DateOfBirth);
+                if (dateIsNotValid) return ServiceResult<IEnumerable<Customer>>.ErrorResult(message: ResponseMessages.DateOfBirthError, statusCode: 422);
+
+                
+                //verificar se o email existe
+                var findCustomerByEmail = _customerRepository.GetByEmail(email: customerDtoRequest.Email);
+
+                if (findCustomerByEmail != null)
+                {
+                    return ServiceResult<IEnumerable<Customer>>.ErrorResult(message: $"{ResponseMessages.EmailExistsError}: {customerDtoRequest.Email}", statusCode: 409);
+                }
+
+                var customer = Customer.RegisterNew
+                (
+                    firstName: customerDtoRequest.FirstName,
+                    lastName: customerDtoRequest.LastName,
+                    email: customerDtoRequest.Email,
+                    dateOfBirth: customerDtoRequest.DateOfBirth
+                );
+
+                if (!customer.IsValid)
+                {
+                    return ServiceResult<IEnumerable<Customer>>.ErrorResult(message: ResponseMessages.CustomerIsNotValid, statusCode: 422);
+                }
+
+                listCustomers.Add(item: customer);
+            }
+
+            _customerRepository.AddRange(entities: listCustomers);
+
+            return ServiceResult<IEnumerable<Customer>>.SuccessResult(data: listCustomers, statusCode: 201);
+        }
+
+        public List<string> CheckForDuplicateEmails(IEnumerable<CustomerDtoRequest> customersDtoRequests)
+        {
+            return customersDtoRequests
+                   .GroupBy(c => c.Email)
+                   .Where(group => group.Count() > 1)
+                   .Select(group => group.Key)
+                   .ToList();
         }
 
         public ServiceResult<Customer> Delete(int id)

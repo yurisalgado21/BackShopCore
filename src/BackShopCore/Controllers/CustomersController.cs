@@ -3,6 +3,7 @@ using BackShopCore.Dto;
 using BackShopCore.Services;
 using BackShopCore.Utils;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BackShopCore.Controllers
 {
@@ -56,6 +57,34 @@ namespace BackShopCore.Controllers
             _dbContext.SaveChanges();
 
             return CreatedAtAction(actionName: nameof(GetById), routeValues: new { id = result.Data.CustomerId }, value: result.Data);
+        }
+
+        [HttpPost("Bulk")]
+        public async Task<IActionResult> AddBulk([FromBody] IEnumerable<CustomerDtoRequest> customersDtoRequest)
+        {
+            var transaction = await _dbContext.Database.BeginTransactionAsync();
+
+            try
+            {
+                if (customersDtoRequest.Count() == 0) return NoContent();
+
+                var result = _customerServices.AddBulk(customersDtoRequest: customersDtoRequest);
+
+                if (!result.Success)
+                {
+                    return StatusCode(statusCode: result.StatusCode, value: result.Message);
+                }
+
+                await _dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Created("", result.Data);
+            }
+            catch (Exception err)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(statusCode: 500, value: new { message = err.Message });
+            }
         }
 
         [HttpPut("{id}")]
