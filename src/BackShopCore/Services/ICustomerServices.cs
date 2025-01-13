@@ -13,6 +13,7 @@ namespace BackShopCore.Services
         public ServiceResult<Customer> GetById(int id);
         public ServiceResult<Customer> Add(CustomerDtoRequest customerDtoRequest);
         public ServiceResult<IEnumerable<Customer>> AddBulk(IEnumerable<CustomerDtoRequest> customersDtoRequest);
+        public ServiceResult<Bulk2ImportCustomersResponse> AddBulk2(IEnumerable<CustomerDtoRequest> customersDtoRequest);
         public ServiceResult<Customer> Update(int id, CustomerDtoRequest customerDtoRequest);
         public ServiceResult<Customer> Delete(int id);
     }

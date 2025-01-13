@@ -92,6 +92,112 @@ namespace BackShopCore.Services
             return ServiceResult<IEnumerable<Customer>>.SuccessResult(data: listCustomers, statusCode: 201);
         }
 
+        public ServiceResult<Bulk2ImportCustomersResponse> AddBulk2(IEnumerable<CustomerDtoRequest> customersDtoRequest)
+        {
+            var bulkImportCustomersReponse = new Bulk2ImportCustomersResponse();
+            bulkImportCustomersReponse.Success = new List<Customer>();
+            bulkImportCustomersReponse.Failure = new List<CustomerWithMessageError>();
+
+            //verificar se existe duplicatas de email
+            var duplicateEmails = CheckForDuplicateEmails(customersDtoRequests: customersDtoRequest);
+
+            if (duplicateEmails.Any())
+            {
+                foreach (var customerDtoRequest in customersDtoRequest)
+                {
+                    var customerIsDupliated = duplicateEmails.Contains(item: customerDtoRequest.Email);
+
+                    if (customerIsDupliated)
+                    {
+                        bulkImportCustomersReponse.Failure.Add
+                        (
+                            item: new CustomerWithMessageError
+                            {  
+                                Customer = customerDtoRequest,
+                                ErrorMessage = ResponseMessages.DuplicateEmailFoundError
+                            }
+                        );
+                    }
+                };
+            }
+            
+            foreach (var customerDtoRequest in customersDtoRequest)
+            {
+                // verificar data maior que hoje.
+                var dateIsNotValid = VerifyDateOfBirth(dateOfBirth: customerDtoRequest.DateOfBirth);
+                if (dateIsNotValid)
+                {
+                    bulkImportCustomersReponse.Failure.Add
+                    (
+                        item: new CustomerWithMessageError
+                        {  
+                            Customer = customerDtoRequest,
+                            ErrorMessage = ResponseMessages.DateOfBirthError
+                        }
+                    );
+                }
+                
+                //verificar se o email existe
+                var findCustomerByEmail = _customerRepository.GetByEmail(email: customerDtoRequest.Email);
+
+                if (findCustomerByEmail != null)
+                {
+                    bulkImportCustomersReponse.Failure.Add
+                    (
+                        item: new CustomerWithMessageError
+                        {  
+                            Customer = customerDtoRequest,
+                            ErrorMessage = ResponseMessages.EmailExistsError
+                        }
+                    );
+                }
+
+                var customer = Customer.RegisterNew
+                (
+                    firstName: customerDtoRequest.FirstName,
+                    lastName: customerDtoRequest.LastName,
+                    email: customerDtoRequest.Email,
+                    dateOfBirth: customerDtoRequest.DateOfBirth
+                );
+
+                if (!customer.IsValid)
+                {
+                    bulkImportCustomersReponse.Failure.Add
+                    (
+                        item: new CustomerWithMessageError
+                        {  
+                            Customer = customerDtoRequest,
+                            ErrorMessage = ResponseMessages.CustomerIsNotValid
+                        }
+                    );
+                }
+
+                if
+                (
+                    !dateIsNotValid &&
+                    findCustomerByEmail == null &&
+                    customer.IsValid &&
+                    !duplicateEmails.Contains(item: customerDtoRequest.Email)
+                )
+                {
+                    bulkImportCustomersReponse.Success.Add(item: customer);
+                }
+
+            }
+
+            _customerRepository.AddRange(entities: bulkImportCustomersReponse.Success);
+
+            var bulkCustomersReponse = new Bulk2ImportCustomersResponse
+            {
+                SuccessCustomersCount = bulkImportCustomersReponse.Success.Count,
+                FailureCustomersCount = bulkImportCustomersReponse.Failure.Count,
+                Success = bulkImportCustomersReponse.Success,
+                Failure = bulkImportCustomersReponse.Failure
+            };
+
+            return ServiceResult<Bulk2ImportCustomersResponse>.SuccessResult(data: bulkCustomersReponse);
+        }
+
         public List<string> CheckForDuplicateEmails(IEnumerable<CustomerDtoRequest> customersDtoRequests)
         {
             return customersDtoRequests

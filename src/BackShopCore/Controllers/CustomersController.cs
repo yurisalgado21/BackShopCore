@@ -87,6 +87,32 @@ namespace BackShopCore.Controllers
             }
         }
 
+        [HttpPost("bulk2")]
+        public async Task<IActionResult> AddBulk2([FromBody] IEnumerable<CustomerDtoRequest> customersDtoRequest)
+        {
+            var transaction = await _dbContext.Database.BeginTransactionAsync();
+
+            try
+            {
+                if (customersDtoRequest.Count() == 0)
+                {
+                    return NoContent();
+                }
+
+                var result = _customerServices.AddBulk2(customersDtoRequest: customersDtoRequest);
+
+                await _dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok(result.Data);
+            }
+            catch (Exception err)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(statusCode: 500, value: new { message = err.Message });
+            }
+        }
+
         [HttpPut("{id}")]
         public IActionResult Update(int id, [FromBody] CustomerDtoRequest customerDtoRequest)
         {
