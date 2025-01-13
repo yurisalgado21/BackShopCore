@@ -15,7 +15,7 @@ namespace BackShopCore.Repository
 
         public Customer GetByEmail(string email)
         {
-            var findCustomerByEmail = _dbContext.Customers
+            var findCustomerByEmail = _dbContext.Customers.AsNoTracking()
                 .FirstOrDefault(e => EF.Property<string>(e, "_email") == email);
 
 

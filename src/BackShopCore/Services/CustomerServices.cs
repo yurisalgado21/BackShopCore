@@ -98,6 +98,9 @@ namespace BackShopCore.Services
 
         public ServiceResult<Customer> Update(int id, CustomerDtoRequest customerDtoRequest)
         {
+            var dateIsNotValid = VerifyDateOfBirth(dateOfBirth: customerDtoRequest.DateOfBirth);
+            if (dateIsNotValid) return ServiceResult<Customer>.ErrorResult(message: ResponseMessages.DateOfBirthError, statusCode: 422);
+
             var findCustomer = _dbContext.Customers.AsNoTracking().FirstOrDefault(c => c.CustomerId == id);
 
             if (findCustomer == null)
@@ -107,19 +110,11 @@ namespace BackShopCore.Services
 
             var findCustomerByEmail = GetByEmail(email: customerDtoRequest.Email);
 
-            if (findCustomerByEmail != null) return ServiceResult<Customer>.ErrorResult(message: ResponseMessages.EmailExistsError, 409);
-
-            if (findCustomer.CustomerId != id && findCustomerByEmail!.Email == customerDtoRequest.Email)
-            {
-                return ServiceResult<Customer>.ErrorResult(message: ResponseMessages.ResourceWasNotFound, statusCode: 422);
-            }
-
-            var dateIsNotValid = VerifyDateOfBirth(dateOfBirth: customerDtoRequest.DateOfBirth);
-            if (dateIsNotValid) return ServiceResult<Customer>.ErrorResult(message: ResponseMessages.DateOfBirthError, statusCode: 400);
+            if (findCustomerByEmail != null && findCustomerByEmail.CustomerId != id) return ServiceResult<Customer>.ErrorResult(message: ResponseMessages.EmailExistsError, 409);
 
             var customer = Customer.SetExistingInfo
             (
-                customerId: findCustomer!.CustomerId,
+                customerId: findCustomer.CustomerId,
                 firstName: customerDtoRequest.FirstName,
                 lastName: customerDtoRequest.LastName,
                 email: customerDtoRequest.Email,
