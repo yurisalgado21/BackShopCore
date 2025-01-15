@@ -9,12 +9,14 @@ namespace BackShopCore.Models
         private string _lastName;
         private string _email;
         private DateOnly _dateOfBirth;
+        private ICollection<Address> _addresses;
 
         //public properties
         public string FirstName => _firstName;
         public string LastName => _lastName;
         public string Email => _email;
         public DateOnly DateOfBirth => _dateOfBirth;
+        public ICollection<Address> Addresses => _addresses;
         public bool IsValid { get; private set; }
 
         private Customer(){}
